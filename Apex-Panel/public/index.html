@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="icon" type="image/png" href="public/apx.png" />
+  <title>Apex Panel | AntiCheat Administration Console</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            dot: {
+              black: "#0b0d11",
+              surface: "#131722",
+              card: "#181d2a",
+              cardHover: "#1f2637",
+              border: "#232a3b",
+              orange: "#ff6600",
+              orangeHover: "#e55b00",
+              orangeMuted: "rgba(255, 102, 0, 0.12)"
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #131722; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb { background: #232a3b; border-radius: 4px; transition: background 0.3s ease; }
+    ::-webkit-scrollbar-thumb:hover { background: #ff6600; }
+    * { scrollbar-width: thin; scrollbar-color: #232a3b #131722; }
+  </style>
+</head>
+<body class="bg-dot-black text-slate-200 font-sans antialiased selection:bg-dot-orange selection:text-white flex flex-col min-h-screen">
+
+  <!-- Top Agency Banner -->
+  <div class="bg-dot-orange text-black font-extrabold text-[11px] tracking-widest uppercase py-1 text-center">
+    Apex Panel • Anticheat • Authorized Personnel Only
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 1. LOGIN GATEWAY                                          -->
+  <!-- ========================================================= -->
+  <div id="login-view" class="flex-1 flex flex-col items-center justify-center p-6 space-y-6">
+    <div class="bg-dot-card border border-dot-border rounded-xl p-8 w-full max-w-md space-y-6 shadow-2xl">
+      
+      <div class="text-center space-y-2">
+        <div class="inline-flex items-center gap-2 px-2.5 py-0.5 bg-dot-orangeMuted border border-dot-orange/40 rounded text-dot-orange text-[10px] font-mono font-bold uppercase tracking-widest">
+          Security Clearance Gateway
+        </div>
+        <h1 class="text-2xl font-black text-white uppercase tracking-tight">Apex Anticheat Staff Login</h1>
+        <p class="text-slate-400 text-xs">Enter your staff credentials to access live player telemetry, detections, and security operations.</p>
+      </div>
+
+      <!-- Backend Connection Status Indicator -->
+      <div id="backend-status-banner" class="p-2.5 bg-dot-surface border border-dot-border rounded font-mono text-[11px] flex items-center justify-between">
+        <span class="text-slate-400">Backend Node (Port 3000):</span>
+        <span id="backend-status-text" class="text-yellow-400 font-bold">Pinging...</span>
+      </div>
+
+      <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4 text-xs font-mono">
+        <div>
+          <label class="block text-slate-400 uppercase tracking-wider mb-1">Username</label>
+          <input type="text" id="login-username" required placeholder="e.g., admin" class="w-full bg-dot-surface border border-dot-border rounded px-4 py-2.5 text-white focus:outline-none focus:border-dot-orange" />
+        </div>
+        <div>
+          <label class="block text-slate-400 uppercase tracking-wider mb-1">Password</label>
+          <input type="password" id="login-password" required placeholder="Enter password..." class="w-full bg-dot-surface border border-dot-border rounded px-4 py-2.5 text-white focus:outline-none focus:border-dot-orange" />
+        </div>
+
+        <div id="login-error" class="text-red-400 text-xs hidden p-2.5 bg-red-950/40 border border-red-900/50 rounded font-mono"></div>
+
+        <button type="submit" id="login-btn" class="w-full bg-dot-orange hover:bg-dot-orangeHover text-white py-3 rounded font-bold uppercase tracking-wider transition shadow-lg shadow-orange-950/40">
+          Authenticate & Unlock Console
+        </button>
+
+        <div class="p-3 bg-dot-surface border border-dot-border rounded text-[11px] text-slate-400 space-y-1">
+          <span class="text-dot-orange font-bold uppercase block">Default Account:</span>
+          <span>Username: <code class="text-white">admin</code> | Password: <code class="text-white">adminpassword</code></span>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 2. MAIN DASHBOARD INTERFACE                               -->
+  <!-- ========================================================= -->
+  <div id="dashboard-view" class="flex-1 flex flex-col hidden">
+    
+    <!-- Navigation Header -->
+    <header class="border-b border-dot-border bg-dot-surface/95 sticky top-0 z-50 backdrop-blur">
+      <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        
+        <div class="flex items-center space-x-3">
+          <div class="h-9 w-9 rounded bg-dot-orange/20 border border-dot-orange/40 flex items-center justify-center text-dot-orange font-black text-sm">
+            APX
+          </div>
+          <div>
+            <span class="text-[10px] uppercase font-bold tracking-widest text-dot-orange block leading-none">Apex Panel</span>
+            <span class="text-sm font-black tracking-wider text-white uppercase">Cloud Anticheat</span>
+          </div>
+        </div>
+
+        <nav class="flex items-center space-x-6 text-xs uppercase font-bold tracking-wider">
+          <button onclick="switchTab('players')" id="nav-players" class="nav-btn text-dot-orange border-b-2 border-dot-orange py-1">Live Players</button>
+          <button onclick="switchTab('detections')" id="nav-detections" class="nav-btn text-slate-400 hover:text-white py-1">Violations by Player</button>
+          <button onclick="switchTab('bans')" id="nav-bans" class="nav-btn text-slate-400 hover:text-white py-1">Bans & Unbans</button>
+          <button onclick="switchTab('screenshots')" id="nav-screenshots" class="nav-btn text-slate-400 hover:text-white py-1">Screenshots & Evidence</button>
+          <button onclick="switchTab('staff')" id="nav-staff" class="nav-btn text-slate-400 hover:text-white py-1">Staff Accounts</button>
+        </nav>
+
+        <div class="flex items-center space-x-4">
+          <div class="text-right font-mono text-[11px] hidden sm:block">
+            <span id="header-role" class="ml-2 px-2 py-0.5 rounded bg-dot-card border border-dot-border text-dot-orange font-bold text-[10px]">ADMIN</span>
+          </div>
+          <button onclick="openChangePasswordModal()" class="text-xs font-mono uppercase bg-dot-card hover:bg-dot-border border border-dot-border text-slate-300 px-3 py-1.5 rounded transition">
+            Change Password 🔑
+          </button>
+          <button onclick="handleLogout()" class="text-red-400 hover:text-red-300 text-xs uppercase font-bold tracking-wider transition flex items-center gap-1 bg-dot-card px-3 py-1.5 rounded border border-dot-border font-mono">
+            Lock 🔒
+          </button>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-6 py-8 flex-1 w-full space-y-8">
+      
+      <!-- Operational Metrics -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="p-5 bg-dot-card border border-dot-border rounded-lg space-y-1">
+          <span class="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Connected Game Server</span>
+          <div class="flex items-center justify-between">
+            <span id="metric-server-name" class="text-base font-bold text-white uppercase truncate">Connecting...</span>
+            <span id="metric-status-badge" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-red-950/60 border border-red-800 text-red-400">OFFLINE</span>
+          </div>
+        </div>
+
+        <div class="p-5 bg-dot-card border border-dot-border rounded-lg space-y-1">
+          <span class="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Active Players</span>
+          <div class="text-2xl font-black text-white font-mono" id="metric-player-count">0</div>
+        </div>
+
+        <div class="p-5 bg-dot-card border border-dot-border rounded-lg space-y-1">
+          <span class="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Active Server Bans</span>
+          <div class="text-2xl font-black text-dot-orange font-mono" id="metric-total-bans">0</div>
+        </div>
+
+        <div class="p-5 bg-dot-card border border-dot-border rounded-lg flex items-center justify-between">
+          <div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Entity Cleaner</span>
+            <p class="text-[11px] text-slate-400">Purge rogue vehicles/peds</p>
+          </div>
+          <button onclick="wipeEntities()" class="bg-red-950/60 hover:bg-red-900 border border-red-800 text-red-300 px-3.5 py-2 rounded text-xs font-mono font-bold uppercase transition">
+            Wipe 🧹
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB 1: LIVE PLAYERS -->
+      <section id="tab-section-players" class="space-y-4">
+        <div class="flex items-center justify-between border-b border-dot-border pb-3">
+          <div>
+            <h2 class="text-lg font-black text-white uppercase tracking-wide">Live Connected Players</h2>
+            <p class="text-slate-400 text-xs">Execute real-time investigations, capture client screens, and manage disciplinary actions.</p>
+          </div>
+          <button onclick="fetchDashboard()" class="text-xs font-mono text-dot-orange hover:underline">🔄 Refresh Roster</button>
+        </div>
+
+        <div class="bg-dot-card border border-dot-border rounded-lg overflow-hidden shadow-xl">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left font-mono text-xs">
+              <thead>
+                <tr class="border-b border-dot-border bg-dot-surface text-slate-400 uppercase text-[10px]">
+                  <th class="py-3.5 px-4">Server ID</th>
+                  <th class="py-3.5 px-4">Player Name</th>
+                  <th class="py-3.5 px-4">Ping</th>
+                  <th class="py-3.5 px-4">License Identifier</th>
+                  <th class="py-3.5 px-4 text-right">Administrative Actions</th>
+                </tr>
+              </thead>
+              <tbody id="players-table-body" class="divide-y divide-dot-border text-slate-300">
+                <tr><td colspan="5" class="py-6 text-center text-slate-500">Connecting to FiveM game server telemetry...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: VIOLATIONS GROUPED BY PLAYER -->
+      <section id="tab-section-detections" class="space-y-4 hidden">
+        <div class="flex items-center justify-between border-b border-dot-border pb-3">
+          <div>
+            <h2 class="text-lg font-black text-white uppercase tracking-wide">Live Player Detections</h2>
+            <p class="text-slate-400 text-xs">Violations grouped by individual player cards to prevent multi-detection feed spam.</p>
+          </div>
+          <button onclick="clearAllViolations()" class="text-xs font-mono bg-dot-surface hover:bg-dot-card border border-dot-border px-3 py-1 rounded text-slate-300 transition">
+            Clear Violation Memory 🗑️
+          </button>
+        </div>
+
+        <div id="player-violations-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="p-8 bg-dot-card border border-dot-border rounded-lg text-center text-xs text-slate-500 font-mono col-span-2">
+            No live player violations recorded.
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: BANS & UNBAN MANAGEMENT -->
+      <section id="tab-section-bans" class="space-y-6 hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-dot-border pb-3 gap-2">
+          <div>
+            <h2 class="text-lg font-black text-white uppercase tracking-wide">Permanent & Timed Bans</h2>
+            <p class="text-slate-400 text-xs">Review bans recorded through the cloud panel and revoke bans using the server unban hook.</p>
+          </div>
+          
+          <div class="flex items-center gap-2">
+            <input type="text" id="manual-unban-input" placeholder="Enter Ban ID (e.g. 8A3FC912)" class="bg-dot-card border border-dot-border rounded px-3 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-dot-orange" />
+            <button onclick="submitManualUnban()" class="bg-dot-orange hover:bg-dot-orangeHover text-white px-3 py-1.5 rounded text-xs font-bold uppercase font-mono transition">
+                Revoke Single
+            </button>
+            <button onclick="submitBulkUnban()" class="bg-red-950/80 hover:bg-red-900 border border-red-800 text-red-200 px-3 py-1.5 rounded text-xs font-bold uppercase font-mono transition">
+                Revoke All (matching) <ins>♃</ins>
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-dot-card border border-dot-border rounded-lg overflow-hidden shadow-xl">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left font-mono text-xs">
+              <thead>
+                <tr class="border-b border-dot-border bg-dot-surface text-slate-400 uppercase text-[10px]">
+                  <th class="py-3.5 px-4">Ban ID</th>
+                  <th class="py-3.5 px-4">Target Player</th>
+                  <th class="py-3.5 px-4">Reason</th>
+                  <th class="py-3.5 px-4">Timestamp</th>
+                  <th class="py-3.5 px-4">Status</th>
+                  <th class="py-3.5 px-4 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="bans-table-body" class="divide-y divide-dot-border text-slate-300">
+                <tr><td colspan="6" class="py-6 text-center text-slate-500">Loading ban database...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: SCREENSHOTS & EVIDENCE TIED TO PLAYERS -->
+      <section id="tab-section-screenshots" class="space-y-4 hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-dot-border pb-3 gap-3">
+          <div>
+            <h2 class="text-lg font-black text-white uppercase tracking-wide">Captured Client Evidence</h2>
+            <p class="text-slate-400 text-xs">In-game screenshots indexed with player names, server IDs, and timestamps.</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <input 
+              type="text" 
+              id="screenshot-search-input" 
+              placeholder="Search by Player Name or ID..." 
+              oninput="filterScreenshots()" 
+              class="bg-dot-card border border-dot-border rounded px-3 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-dot-orange w-64"
+            />
+            <button onclick="clearScreenshotFilter()" id="screenshot-clear-btn" class="hidden text-xs font-mono text-slate-400 hover:text-white underline">
+              Reset
+            </button>
+            <button onclick="fetchScreenshots()" class="text-xs font-mono text-dot-orange hover:underline whitespace-nowrap">
+              🔄 Refresh
+            </button>
+          </div>
+        </div>
+
+        <div id="screenshots-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div class="p-8 bg-dot-card border border-dot-border rounded-lg text-center text-xs text-slate-500 font-mono col-span-3">
+            No screenshots captured yet.
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: STAFF ACCOUNTS -->
+      <section id="tab-section-staff" class="space-y-6 hidden">
+        <div class="flex items-center justify-between border-b border-dot-border pb-3">
+          <div>
+            <h2 class="text-lg font-black text-white uppercase tracking-wide">Staff Credential Administration</h2>
+            <p class="text-slate-400 text-xs">Provision and manage administrative login credentials for security personnel.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Create Staff Form -->
+          <div class="bg-dot-card border border-dot-border rounded-lg p-6 space-y-4 shadow-xl">
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider border-b border-dot-border pb-2">Create New Staff Login</h3>
+            <form id="create-user-form" onsubmit="handleCreateStaff(event)" class="space-y-4 text-xs font-mono">
+              <div>
+                <label class="block text-slate-400 uppercase tracking-wider mb-1">Username <span class="text-dot-orange">*</span></label>
+                <input type="text" id="new-staff-username" required placeholder="e.g., officer_smith" class="w-full bg-dot-surface border border-dot-border rounded px-3 py-2 text-white focus:outline-none focus:border-dot-orange" />
+              </div>
+              <div>
+                <label class="block text-slate-400 uppercase tracking-wider mb-1">Temporary Password <span class="text-dot-orange">*</span></label>
+                <input type="text" id="new-staff-password" required placeholder="Min 6 characters" class="w-full bg-dot-surface border border-dot-border rounded px-3 py-2 text-white focus:outline-none focus:border-dot-orange" />
+              </div>
+              <div>
+                <label class="block text-slate-400 uppercase tracking-wider mb-1">Role / Clearance <span class="text-dot-orange">*</span></label>
+                <select id="new-staff-role" class="w-full bg-dot-surface border border-dot-border rounded px-3 py-2 text-white focus:outline-none focus:border-dot-orange">
+                  <option value="Moderator">Moderator (View & Kick)</option>
+                  <option value="Administrator">Administrator (Full Access & Ban)</option>
+                </select>
+              </div>
+
+              <div id="create-staff-msg" class="text-xs hidden font-mono"></div>
+
+              <button type="submit" class="w-full bg-dot-orange hover:bg-dot-orangeHover text-white py-2.5 rounded font-bold uppercase tracking-wider transition font-mono">
+                Provision Credentials
+              </button>
+            </form>
+          </div>
+
+          <!-- Staff Table -->
+          <div class="lg:col-span-2 bg-dot-card border border-dot-border rounded-lg p-6 space-y-4 shadow-xl">
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider border-b border-dot-border pb-2">Active Security Logins</h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left font-mono text-xs">
+                <thead>
+                  <tr class="border-b border-dot-border text-slate-400 uppercase text-[10px]">
+                    <th class="py-2.5 px-3">Username</th>
+                    <th class="py-2.5 px-3">Role</th>
+                    <th class="py-2.5 px-3">Provisioned Date</th>
+                    <th class="py-2.5 px-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="staff-table-body" class="divide-y divide-dot-border text-slate-300">
+                  <tr><td colspan="4" class="py-4 text-center text-slate-500">Loading accounts...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-dot-border bg-dot-surface py-6 px-6 text-center text-xs text-slate-500 uppercase tracking-wider font-semibold">
+      Apex Panel • Anticheat • Authorized Personnel Only
+    </footer>
+
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 3. CHANGE PASSWORD MODAL                                   -->
+  <!-- ========================================================= -->
+  <div id="password-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-dot-card border border-dot-border rounded-xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-dot-border pb-3">
+        <h2 class="text-base font-bold text-white uppercase">Update Staff Password</h2>
+        <button onclick="closeChangePasswordModal()" class="text-slate-400 hover:text-white font-mono text-sm">✕</button>
+      </div>
+
+      <form id="change-pass-form" onsubmit="handleChangePassword(event)" class="space-y-4 text-xs font-mono">
+        <div>
+          <label class="block text-slate-400 uppercase tracking-wider mb-1">Current Password</label>
+          <input type="password" id="chg-current-pass" required class="w-full bg-dot-surface border border-dot-border rounded px-3 py-2 text-white focus:outline-none focus:border-dot-orange" />
+        </div>
+        <div>
+          <label class="block text-slate-400 uppercase tracking-wider mb-1">New Password</label>
+          <input type="password" id="chg-new-pass" required placeholder="Minimum 6 characters" class="w-full bg-dot-surface border border-dot-border rounded px-3 py-2 text-white focus:outline-none focus:border-dot-orange" />
+        </div>
+        <div id="change-pass-msg" class="text-xs hidden font-mono"></div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeChangePasswordModal()" class="px-4 py-2 bg-dot-surface hover:bg-dot-border rounded text-slate-300 uppercase">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-dot-orange hover:bg-dot-orangeHover rounded text-white font-bold uppercase">Save Password</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 4. SCRIPT LOGIC                                           -->
+  <!-- ========================================================= -->
+  <script>
+    const isDevServer = window.location.protocol === 'file:' || 
+      (window.location.port && window.location.port !== '3000' && window.location.port !== '80' && window.location.port !== '443');
+
+    const API_BASE = isDevServer 
+      ? `http://${(window.location.hostname && window.location.hostname !== '') ? window.location.hostname : '127.0.0.1'}:3000` 
+      : '';
+
+    let currentUser = JSON.parse(sessionStorage.getItem('apex_user') || 'null');
+    let activeTab = 'players';
+    let cachedScreenshots = [];
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      checkBackendHealth();
+      if (currentUser) {
+        showDashboard();
+      } else {
+        showLogin();
+      }
+    });
+
+    async function checkBackendHealth() {
+      const statusText = document.getElementById('backend-status-text');
+      if (!statusText) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/health`);
+        if (res.ok) {
+          statusText.innerText = "ONLINE (Connected)";
+          statusText.className = "text-emerald-400 font-bold";
+        } else {
+          throw new Error();
+        }
+      } catch {
+        statusText.innerText = `OFFLINE (Cannot reach ${API_BASE || 'port 3000'})`;
+        statusText.className = "text-red-400 font-bold";
+      }
+    }
+
+    function showLogin() {
+      document.getElementById('login-view').classList.remove('hidden');
+      document.getElementById('dashboard-view').classList.add('hidden');
+    }
+
+    function showDashboard() {
+      document.getElementById('login-view').classList.add('hidden');
+      document.getElementById('dashboard-view').classList.remove('hidden');
+      document.getElementById('header-role').innerText = (currentUser.role || 'STAFF').toUpperCase();
+
+      if (currentUser.mustChangePassword) {
+        openChangePasswordModal(true);
+      }
+
+      fetchDashboard();
+      fetchBans();
+      fetchScreenshots();
+      fetchStaff();
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const username = document.getElementById('login-username').value.trim();
+      const password = document.getElementById('login-password').value.trim();
+      const errorDiv = document.getElementById('login-error');
+      const submitBtn = document.getElementById('login-btn');
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = "Authenticating...";
+      errorDiv.classList.add('hidden');
+
+      try {
+        const res = await fetch(`${API_BASE}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        
+        let data;
+        try {
+          data = await res.json();
+        } catch {
+          throw new Error(`Server returned HTTP ${res.status} with non-JSON response.`);
+        }
+
+        if (res.ok && data.success) {
+          currentUser = data.user;
+          sessionStorage.setItem('apex_user', JSON.stringify(currentUser));
+          showDashboard();
+        } else {
+          errorDiv.innerText = `⚠️ ${data.error || 'Invalid credentials'}`;
+          errorDiv.classList.remove('hidden');
+        }
+      } catch (err) {
+        console.error("Login communication error:", err);
+        errorDiv.innerText = `⚠️ Connection error: ${err.message}. Ensure panel_server.js is running at ${API_BASE || window.location.origin}`;
+        errorDiv.classList.remove('hidden');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Authenticate & Unlock Console";
+      }
+    }
+
+    function handleLogout() {
+      sessionStorage.removeItem('apex_user');
+      currentUser = null;
+      showLogin();
+    }
+
+    function switchTab(tab) {
+      activeTab = tab;
+      const tabs = ['players', 'detections', 'bans', 'screenshots', 'staff'];
+      tabs.forEach(t => {
+        document.getElementById(`tab-section-${t}`).classList.add('hidden');
+        const btn = document.getElementById(`nav-${t}`);
+        if (btn) btn.className = "nav-btn text-slate-400 hover:text-white py-1";
+      });
+
+      document.getElementById(`tab-section-${tab}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`nav-${tab}`);
+      if (activeBtn) activeBtn.className = "nav-btn text-dot-orange border-b-2 border-dot-orange py-1";
+
+      if (tab === 'bans') fetchBans();
+      if (tab === 'screenshots') fetchScreenshots();
+      if (tab === 'staff') fetchStaff();
+    }
+
+    function openChangePasswordModal(isForced = false) {
+      document.getElementById('change-pass-msg').classList.add('hidden');
+      document.getElementById('change-pass-form').reset();
+      document.getElementById('password-modal').classList.remove('hidden');
+    }
+
+    function closeChangePasswordModal() {
+      document.getElementById('password-modal').classList.add('hidden');
+    }
+
+    async function handleChangePassword(e) {
+      e.preventDefault();
+      const currentPassword = document.getElementById('chg-current-pass').value;
+      const newPassword = document.getElementById('chg-new-pass').value;
+      const msg = document.getElementById('change-pass-msg');
+
+      try {
+        const res = await fetch(`${API_BASE}/api/auth/change-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: currentUser.username,
+            currentPassword,
+            newPassword
+          })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          msg.className = "text-xs font-mono text-emerald-400";
+          msg.innerText = "✓ Password updated successfully!";
+          msg.classList.remove('hidden');
+          currentUser.mustChangePassword = false;
+          sessionStorage.setItem('apex_user', JSON.stringify(currentUser));
+          setTimeout(closeChangePasswordModal, 1200);
+        } else {
+          msg.className = "text-xs font-mono text-red-400";
+          msg.innerText = `⚠️ ${data.error || 'Update failed'}`;
+          msg.classList.remove('hidden');
+        }
+      } catch {
+        msg.className = "text-xs font-mono text-red-400";
+        msg.innerText = '⚠️ Server connection error.';
+        msg.classList.remove('hidden');
+      }
+    }
+
+    // Dashboard Telemetry Polling
+    async function fetchDashboard() {
+      if (!currentUser) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/panel/data`);
+        if (!res.ok) throw new Error('Data fetch failed');
+        const data = await res.json();
+
+        document.getElementById('metric-server-name').innerText = data.server.serverName || "FiveM Server";
+        document.getElementById('metric-player-count').innerText = data.server.playerCount || 0;
+        document.getElementById('metric-total-bans').innerText = data.server.totalBans || 0;
+
+        const badge = document.getElementById('metric-status-badge');
+        if (data.isOnline) {
+          badge.innerText = "ONLINE";
+          badge.className = "px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-emerald-950/60 border border-emerald-800 text-emerald-400";
+        } else {
+          badge.innerText = "OFFLINE";
+          badge.className = "px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-red-950/60 border border-red-800 text-red-400";
+        }
+
+        // Render Connected Players Table with Actual Names
+        const tbody = document.getElementById('players-table-body');
+        if (data.server.onlinePlayers && data.server.onlinePlayers.length > 0) {
+          tbody.innerHTML = data.server.onlinePlayers.map(p => {
+            const license = (p.identifiers && p.identifiers.license) ? p.identifiers.license : 'N/A';
+            return `
+              <tr class="hover:bg-dot-surface transition">
+                <td class="py-3 px-4 font-bold text-dot-orange">${p.source}</td>
+                <td class="py-3 px-4 font-bold text-white uppercase">${p.name}</td>
+                <td class="py-3 px-4 text-slate-300">${p.ping}ms</td>
+                <td class="py-3 px-4 text-[11px] text-slate-400">${license}</td>
+                <td class="py-3 px-4 text-right space-x-2">
+                  <button onclick="takeScreenshot(${p.source}, '${escapeHtml(p.name)}')" class="px-2.5 py-1 bg-dot-surface hover:bg-dot-border border border-dot-border rounded text-slate-200 uppercase font-bold text-[10px]">Screenshot 📸</button>
+                  <button onclick="viewPlayerEvidence('${p.source}')" class="px-2.5 py-1 bg-dot-surface hover:bg-dot-border border border-dot-border rounded text-dot-orange uppercase font-bold text-[10px]">Evidence 🖼️</button>
+                  <button onclick="kickPlayer(${p.source}, '${escapeHtml(p.name)}')" class="px-2.5 py-1 bg-yellow-950/60 hover:bg-yellow-900 border border-yellow-800 rounded text-yellow-300 uppercase font-bold text-[10px]">Kick</button>
+                  <button onclick="banPlayer(${p.source}, '${escapeHtml(p.name)}')" class="px-2.5 py-1 bg-red-950/60 hover:bg-red-900 border border-red-800 rounded text-red-300 uppercase font-bold text-[10px]">Ban</button>
+                </td>
+              </tr>
+            `;
+          }).join('');
+        } else {
+          tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-500">No players connected or FiveM server offline.</td></tr>`;
+        }
+
+        renderPlayerViolations(data.playerViolations || {});
+      } catch (err) {
+        console.error("Dashboard poll error:", err);
+      }
+    }
+
+    function renderPlayerViolations(groupedViolations) {
+      const container = document.getElementById('player-violations-container');
+      const playerKeys = Object.keys(groupedViolations);
+
+      if (playerKeys.length === 0) {
+        container.innerHTML = `
+          <div class="p-8 bg-dot-card border border-dot-border rounded-lg text-center text-xs text-slate-500 font-mono col-span-2">
+            No active player violations recorded.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = playerKeys.map(key => {
+        const item = groupedViolations[key];
+        const badges = Object.entries(item.detections || {}).map(([det, count]) => `
+          <span class="px-2 py-0.5 bg-dot-surface border border-dot-border rounded text-[10px] text-dot-orange">
+            ${det} <strong class="text-white ml-1">${count}</strong>
+          </span>
+        `).join('');
+
+        const historyRows = item.history.map(h => `
+          <div class="p-2 bg-dot-black/60 rounded border border-dot-border text-[11px] space-y-0.5">
+            <div class="flex justify-between items-center text-slate-400">
+              <span class="text-red-400 font-bold">${h.detection}</span>
+              <span>${h.time}</span>
+            </div>
+            <p class="text-slate-300 leading-snug">${h.reason}</p>
+          </div>
+        `).join('');
+
+        return `
+          <div class="bg-dot-card border border-dot-border rounded-lg p-5 space-y-4 shadow-xl hover:border-dot-orange transition">
+            <div class="flex items-start justify-between border-b border-dot-border pb-3">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="px-2 py-0.5 rounded font-mono text-[10px] uppercase font-bold bg-red-950/60 border border-red-800 text-red-400">${item.totalCount} Strikes</span>
+                  <span class="font-mono text-xs text-slate-400">ID: <strong class="text-dot-orange">${item.source}</strong></span>
+                </div>
+                <h3 class="text-base font-black text-white uppercase mt-1">${item.playerName}</h3>
+                <span class="text-[10px] font-mono text-slate-500">Last Trigger: ${item.lastSeen}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="takeScreenshot(${item.source}, '${escapeHtml(item.playerName)}')" title="Capture Screen" class="px-2 py-1 bg-dot-surface hover:bg-dot-border border border-dot-border rounded text-xs">📸</button>
+                <button onclick="viewPlayerEvidence('${item.source}')" title="View Evidence" class="px-2 py-1 bg-dot-surface hover:bg-dot-border border border-dot-border rounded text-xs">🖼️</button>
+                <button onclick="kickPlayer(${item.source}, '${escapeHtml(item.playerName)}')" class="px-2 py-1 bg-yellow-950/60 hover:bg-yellow-900 border border-yellow-800 text-yellow-300 rounded text-xs font-bold font-mono uppercase">Kick</button>
+                <button onclick="banPlayer(${item.source}, '${escapeHtml(item.playerName)}')" class="px-2 py-1 bg-red-950/60 hover:bg-red-900 border border-red-800 text-red-300 rounded text-xs font-bold font-mono uppercase">Ban</button>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap gap-1.5 font-mono">
+              ${badges}
+            </div>
+
+            <div class="space-y-2 max-h-48 overflow-y-auto font-mono">
+              ${historyRows}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Bans & Unban Logic
+    async function fetchBans() {
+      try {
+        const res = await fetch(`${API_BASE}/api/panel/bans`);
+        const bans = await res.json();
+        const tbody = document.getElementById('bans-table-body');
+
+        if (!bans || bans.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-500">No recorded bans in database.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = bans.map(b => `
+          <tr class="hover:bg-dot-surface transition">
+            <td class="py-3 px-4 font-bold text-dot-orange">${b.banId}</td>
+            <td class="py-3 px-4 font-bold text-white uppercase">${b.playerName || ('Player ' + b.target)} <span class="text-xs text-dot-orange font-mono">(${b.target})</span></td>
+            <td class="py-3 px-4 text-slate-300">${b.reason}</td>
+            <td class="py-3 px-4 text-slate-400">${b.date}</td>
+            <td class="py-3 px-4">
+              ${b.revoked 
+                ? `<span class="px-2 py-0.5 rounded text-[10px] bg-slate-800 border border-slate-700 text-slate-400 font-bold uppercase">REVOKED</span>` 
+                : `<span class="px-2 py-0.5 rounded text-[10px] bg-red-950/60 border border-red-800 text-red-400 font-bold uppercase">ACTIVE</span>`}
+            </td>
+            <td class="py-3 px-4 text-right">
+              ${!b.revoked ? `
+                <button onclick="unbanPlayer('${b.banId}', '${b.license || ''}', '${b.target || ''}')" class="px-3 py-1 bg-emerald-950/60 hover:bg-emerald-900 border border-emerald-800 text-emerald-300 rounded text-[10px] font-bold uppercase font-mono transition">
+                  Unban 🔓
+                </button>
+              ` : `<span class="text-slate-500 text-[10px] italic">Cleared</span>`}
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error("Bans fetch error:", err);
+      }
+    }
+
+    async function unbanPlayer(banId, license = null, target = null) {
+      if (!confirm(`Revoke ban on the FiveM server?`)) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/panel/unban`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ banId, license, target })
+        });
+        const data = await res.json();
+        alert(data.message || 'Unban command queued!');
+        fetchBans();
+      } catch {
+        alert('Failed to process unban.');
+      }
+    }
+
+    function submitManualUnban() {
+      const input = document.getElementById('manual-unban-input');
+      const val = input.value.trim();
+      if (!val) return alert('Enter a valid Ban ID or License');
+      unbanPlayer(val, val, val);
+      input.value = '';
+    }
+
+    function renderScreenshots(shots) {
+      const container = document.getElementById('screenshots-container');
+
+      if (!shots || shots.length === 0) {
+        container.innerHTML = `
+          <div class="p-8 bg-dot-card border border-dot-border rounded-lg text-center text-xs text-slate-500 font-mono col-span-3">
+            No captured screenshots matched the criteria.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = shots.map(item => `
+        <div class="bg-dot-card border border-dot-border rounded-lg overflow-hidden group hover:border-dot-orange transition shadow flex flex-col justify-between">
+          <a href="${API_BASE}/screenshots/${item.filename}" target="_blank" class="block aspect-video bg-black relative overflow-hidden">
+            <img src="${API_BASE}/screenshots/${item.filename}" alt="Evidence Screen" class="w-full h-full object-cover group-hover:scale-105 transition" />
+          </a>
+
+          <div class="p-4 bg-dot-surface space-y-2 border-t border-dot-border">
+            <div class="flex justify-between items-start">
+              <div>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-white font-black uppercase text-sm block truncate" id="name-${item.id}">
+                    ${item.playerName || 'Unknown Player'}
+                  </span>
+                  <button onclick="editScreenshotName('${item.id}', '${escapeHtml(item.playerName || '')}')" title="Assign / Edit Player Name" class="text-slate-400 hover:text-dot-orange text-xs transition">
+                    ✏️
+                  </button>
+                </div>
+                <span class="text-[10px] font-mono text-dot-orange font-bold">Server ID: ${item.target}</span>
+              </div>
+              <span class="text-[9px] font-mono text-slate-400">${item.formattedDate}</span>
+            </div>
+
+            <div class="text-[10px] font-mono text-slate-400 truncate">
+              License: <span class="text-slate-300">${item.license || 'N/A'}</span>
+            </div>
+
+            <div class="flex items-center justify-between pt-2 border-t border-dot-border">
+              <a href="${API_BASE}/screenshots/${item.filename}" target="_blank" class="text-dot-orange hover:underline font-bold text-xs font-mono">
+                View Evidence ↗
+              </a>
+              <button onclick="deleteScreenshot('${item.id}')" class="text-red-400 hover:text-red-300 font-mono text-xs">
+                Delete 🗑️
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function fetchScreenshots(targetFilter = '') {
+      try {
+        let url = `${API_BASE}/api/panel/screenshots`;
+    
+        if (targetFilter) {
+          url += `?target=${targetFilter}`;
+        }
+    
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Failed to fetch screenshots');
+    
+        const data = await res.json();
+    
+        cachedScreenshots = data.screenshots || [];
+    
+        filterScreenshots(); 
+      } catch (err) {
+        console.error("Screenshot fetch error:", err);
+      }
+    }
+
+    async function editScreenshotName(shotId, currentName) {
+      const newName = prompt("Enter the player's actual in-game name for this screenshot:", currentName !== 'Unknown Player' ? currentName : '');
+      if (!newName || newName.trim() === '') return;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/panel/screenshots/${shotId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ playerName: newName.trim() })
+        });
+        if (res.ok) {
+          fetchScreenshots();
+        } else {
+          alert('Failed to update player name.');
+        }
+      } catch {
+        alert('Server communication error.');
+      }
+    }
+
+    function filterScreenshots() {
+      const query = document.getElementById('screenshot-search-input').value.toLowerCase().trim();
+      const clearBtn = document.getElementById('screenshot-clear-btn');
+      
+      if (query.length > 0) {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+      }
+
+      const filtered = cachedScreenshots.filter(s => 
+        String(s.target).toLowerCase().includes(query) || 
+        String(s.playerName).toLowerCase().includes(query) ||
+        String(s.license).toLowerCase().includes(query)
+      );
+      renderScreenshots(filtered);
+    }
+
+    function clearScreenshotFilter() {
+      document.getElementById('screenshot-search-input').value = '';
+      document.getElementById('screenshot-clear-btn').classList.add('hidden');
+      renderScreenshots(cachedScreenshots);
+    }
+
+    function viewPlayerEvidence(targetId) {
+      switchTab('screenshots');
+      document.getElementById('screenshot-search-input').value = targetId;
+      document.getElementById('screenshot-clear-btn').classList.remove('hidden');
+      fetchScreenshots(targetId);
+    }
+
+    async function deleteScreenshot(id) {
+      if (!confirm("Permanently delete this captured screenshot from disk?")) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/panel/screenshots/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          fetchScreenshots();
+        }
+      } catch (err) {
+        alert("Failed to delete screenshot.");
+      }
+    }
+
+    // Staff Accounts
+    async function fetchStaff() {
+      try {
+        const res = await fetch(`${API_BASE}/api/auth/users`);
+        const users = await res.json();
+        const tbody = document.getElementById('staff-table-body');
+
+        tbody.innerHTML = users.map(u => `
+          <tr class="hover:bg-dot-surface transition">
+            <td class="py-3 px-3 font-bold text-white uppercase">${u.username}</td>
+            <td class="py-3 px-3 text-dot-orange font-bold">${u.role}</td>
+            <td class="py-3 px-3 text-slate-400 text-[11px]">${new Date(u.createdAt).toLocaleDateString()}</td>
+            <td class="py-3 px-3 text-right">
+              ${u.username.toLowerCase() !== 'admin' ? `
+                <button onclick="deleteStaff('${u.id}')" class="px-2.5 py-1 bg-red-950/60 hover:bg-red-900 border border-red-800 text-red-300 rounded text-[10px] uppercase font-bold">
+                  Delete
+                </button>
+              ` : `<span class="text-slate-500 text-[10px] italic">Master Admin</span>`}
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error("Staff fetch error:", err);
+      }
+    }
+
+    async function handleCreateStaff(e) {
+      e.preventDefault();
+      const username = document.getElementById('new-staff-username').value.trim();
+      const password = document.getElementById('new-staff-password').value.trim();
+      const role = document.getElementById('new-staff-role').value;
+      const msg = document.getElementById('create-staff-msg');
+
+      try {
+        const res = await fetch(`${API_BASE}/api/auth/users`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password, role })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          msg.className = "text-xs font-mono text-emerald-400";
+          msg.innerText = "✓ Staff account provisioned successfully!";
+          msg.classList.remove('hidden');
+          document.getElementById('create-user-form').reset();
+          fetchStaff();
+          setTimeout(() => msg.classList.add('hidden'), 3000);
+        } else {
+          msg.className = "text-xs font-mono text-red-400";
+          msg.innerText = `⚠️ ${data.error || 'Failed to create staff'}`;
+          msg.classList.remove('hidden');
+        }
+      } catch {
+        msg.className = "text-xs font-mono text-red-400";
+        msg.innerText = '⚠️ Server request failed.';
+        msg.classList.remove('hidden');
+      }
+    }
+
+    async function deleteStaff(id) {
+      if (!confirm('Are you sure you want to revoke this staff login?')) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/auth/users/${id}`, { method: 'DELETE' });
+        if (res.ok) fetchStaff();
+        else alert('Failed to delete staff account.');
+      } catch {
+        alert('Server communication error.');
+      }
+    }
+
+    // Remote Commands
+    async function sendCommand(action, payload) {
+      await fetch(`${API_BASE}/api/panel/command`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, ...payload })
+      });
+      fetchDashboard();
+    }
+
+    async function submitBulkUnban() {
+        const input = document.getElementById('manual-unban-input');
+        const val = input.value.trim();
+
+        if (!val) {
+            alert('Please enter a specific Ban ID, Target ID, or License string in the input box first to bulk revoke.');
+            return;
+        }
+
+        if (!confirm(`Are you sure you want to completely revoke ALL active bans matching/containing "${val}"?`)) return;
+
+        try {
+            const res = await fetch(`${API_BASE}/api/panel/unban-all`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ license: val })
+            });
+            const data = await res.json();
+            alert(data.message || 'Bulk unban processed successfully!');
+            input.value = '';
+            fetchBans();
+        } catch (err) {
+            console.error(err);
+            alert('Failed to process bulk unban request.');
+        }
+    }
+
+    function banPlayer(id, playerName = null) {
+      const targetLabel = playerName ? `${playerName} (ID ${id})` : `Player ${id}`;
+      const reason = prompt(`Enter Ban Reason for ${targetLabel}:`, "Cheating & unauthorized game modification");
+      const hours = prompt("Enter Ban Duration (Hours):", "720");
+      if (reason && hours) {
+        sendCommand('ban', { target: id, playerName: playerName, reason, hours: parseInt(hours, 10) || 24 });
+        alert(`Ban issued for ${targetLabel}. Ban record created.`);
+        fetchBans();
+      }
+    }
+
+    function kickPlayer(id, playerName = null) {
+      const targetLabel = playerName ? `${playerName} (ID ${id})` : `Player ${id}`;
+      const reason = prompt(`Enter Kick Reason for ${targetLabel}:`, "Suspicious game activity");
+      if (reason) sendCommand('kick', { target: id, playerName: playerName, reason });
+    }
+
+    function takeScreenshot(id, playerName = null) {
+      sendCommand('screenshot', { target: id, playerName: playerName });
+      alert(`Screenshot requested for ${playerName || ('Player ' + id)}. Check the Screenshots & Evidence tab in a few moments.`);
+    }
+
+    function wipeEntities() {
+      if (confirm("Purge all rogue vehicles and non-player entities from the server?")) {
+        sendCommand('wipe', { entityType: 'all' });
+      }
+    }
+
+    async function clearAllViolations() {
+      if (confirm("Clear local violation logs for all players?")) {
+        await fetch(`${API_BASE}/api/panel/clear-violations`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        fetchDashboard();
+      }
+    }
+
+    setInterval(fetchDashboard, 3000);
+  </script>
+</body>
+</html>

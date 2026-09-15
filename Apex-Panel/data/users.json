@@ -1,0 +1,10 @@
+[
+  {
+    "id": "admin_1",
+    "username": "admin",
+    "password": "As918500*1",
+    "role": "Administrator",
+    "mustChangePassword": false,
+    "createdAt": "2026-09-15T17:55:06.201Z"
+  }
+]
