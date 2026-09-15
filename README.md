@@ -139,7 +139,8 @@ Invisibility: Flags invisible player peds or vehicles.
 ClientEventTrap: Honeypot triggers designed to catch common executor client events.
 BlacklistedCheatVar: Scans the global _G table for known cheat menu variables (e.g., WarMenu, LynxEvo).
 VehicleSuperSpeed: Flags unrealistic vehicle speeds over 480 km/h.
- InfiniteAmmo: Detects frozen ammo clip counts while shooting.
+
+InfiniteAmmo: Detects frozen ammo clip counts while shooting.
 
 ## **License**
 Distributed under the MIT License. Created as a demonstration of game engine interfacing, network security, and full-stack development.
