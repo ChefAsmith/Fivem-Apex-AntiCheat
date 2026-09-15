@@ -91,7 +91,11 @@ const SERVER_KEY = "key_example"; // Must match Config.Cloud.serverKey in FiveM 
 **Active Detections & Punishments**
 **IMPORTANT:** All detections are set to warn by default. You must customize the punishment type (ban, kick, warn, or alert) in your `config.lua` to fit your server's specific security specifications.
 
+---
+
 **Combat & Weapons**
+
+---
 
 BlacklistedWeapon: Detects usage of weapons defined in the blacklist (e.g., RPG, Minigun).
 
@@ -109,13 +113,21 @@ ProjectileSpam: Mitigates rapid spawning of projectiles like grenades.
 
 VehicleWeapons: Detects players firing restricted/mounted weapons from standard civilian vehicles.
 
+---
+
 **Health & Damage**
+
+---
 
 Godmode: Checks for player/vehicle invincibility flags and abnormally high body health limits.
 
 NoRagdoll: Detects when ragdoll physics are unnaturally disabled.
 
+---
+
 **World, Entities & Peds**
+
+---
 
 IllegalEntity: Prevents the spawning of blacklisted models (e.g., tanks, jets).
 
@@ -127,7 +139,11 @@ WeaponTransfer: Flags unauthorized giving, removing, or stripping of weapons fro
 
 EntityFlood: Mitigates script-kiddie entity flooding by tracking spawn counts within specific time windows.
 
+---
+
 **Network Events & Explosions**
+
+---
 
 BlacklistedEvent: Blocks and flags malicious network events commonly used by mod menus.
 
@@ -137,7 +153,11 @@ FireExploit: Prevents spawning fire on players from distances exceeding the maxi
 
 ParticleFx: Restricts particle scale sizes and prevents attaching particles to remote entities.
 
+---
+
 **Movement**
+
+---
 
 SuperJump: Detects active super jump flags.
 
@@ -147,7 +167,11 @@ Teleportation: Flags instantaneous movement beyond allowed distance thresholds.
 
 UnderwaterWalk: Detects players walking normally deep underwater without swimming.
 
+---
+
 **Client-Side Integrity**
+
+---
 
 VehicleModifier: Identifies torque/speed power increases, instant auto-repair, and unrealistic acceleration.
 
@@ -166,6 +190,8 @@ BlacklistedCheatVar: Scans the global _G table for known cheat menu variables (e
 VehicleSuperSpeed: Flags unrealistic vehicle speeds over 480 km/h.
 
 InfiniteAmmo: Detects frozen ammo clip counts while shooting.
+
+---
 
 ## **License**
 Distributed under the MIT License. Created as a demonstration of game engine interfacing, network security, and full-stack development.
