@@ -94,50 +94,75 @@ const SERVER_KEY = "key_example"; // Must match Config.Cloud.serverKey in FiveM 
 **Combat & Weapons**
 
 BlacklistedWeapon: Detects usage of weapons defined in the blacklist (e.g., RPG, Minigun).
+
 FoldExploit: Flags abnormal fall damage weapon types and silenced zero-damage exploits (C1/C2).
+
 TazerExploit: Blocks rapid tazer firing and firing beyond maximum configured ranges.
+
 WeaponModifier: Catches client-side weapon damage multipliers, melee multipliers, defense modifiers, and explosive/fire ammo flags.
+
 Aimbot: Analyzes silent aimbot vector angle mismatches (camera view vs. bullet impact).
+
 RapidFire: Identifies triggerbots and rapid-fire exploits based on minimum shot intervals per weapon.
+
 ProjectileSpam: Mitigates rapid spawning of projectiles like grenades.
+
 VehicleWeapons: Detects players firing restricted/mounted weapons from standard civilian vehicles.
 
 **Health & Damage**
 
 Godmode: Checks for player/vehicle invincibility flags and abnormally high body health limits.
+
 NoRagdoll: Detects when ragdoll physics are unnaturally disabled.
 
 **World, Entities & Peds**
 
 IllegalEntity: Prevents the spawning of blacklisted models (e.g., tanks, jets).
+
 ClearTasks: Flags unauthorized ClearPedTasks triggered on remote players.
+
 BlacklistedTask: Prevents the execution of prohibited and potentially malicious scripted tasks.
+
 WeaponTransfer: Flags unauthorized giving, removing, or stripping of weapons from remote peds.
+
 EntityFlood: Mitigates script-kiddie entity flooding by tracking spawn counts within specific time windows.
 
 **Network Events & Explosions**
 
 BlacklistedEvent: Blocks and flags malicious network events commonly used by mod menus.
+
 ExplosionFilter: Blocks non-whitelisted explosion types, invisible explosions, and excessive damage scales.
+
 FireExploit: Prevents spawning fire on players from distances exceeding the maximum configured range.
+
 ParticleFx: Restricts particle scale sizes and prevents attaching particles to remote entities.
 
 **Movement**
 
 SuperJump: Detects active super jump flags.
+
 NoClip: Analyzes abnormal speeds when a player's position is frozen or collision is disabled.
+
 Teleportation: Flags instantaneous movement beyond allowed distance thresholds.
+
 UnderwaterWalk: Detects players walking normally deep underwater without swimming.
 
 **Client-Side Integrity**
 
 VehicleModifier: Identifies torque/speed power increases, instant auto-repair, and unrealistic acceleration.
+
 FreecamSpectate: Flags active spectator mode or camera distances exceeding maximum thresholds.
+
 AntiTamper: Detects if the anticheat resource is stopped or restarted on the client.
+
 VisualExploits: Detects unauthorized thermal or night vision toggles.
+
 Invisibility: Flags invisible player peds or vehicles.
+
 ClientEventTrap: Honeypot triggers designed to catch common executor client events.
+
 BlacklistedCheatVar: Scans the global _G table for known cheat menu variables (e.g., WarMenu, LynxEvo).
+
 VehicleSuperSpeed: Flags unrealistic vehicle speeds over 480 km/h.
 
 InfiniteAmmo: Detects frozen ammo clip counts while shooting.
