@@ -1,1 +1,5 @@
-node_modules/
+Apex-Panel/node_modules/
+Apex-Panel/public/screenshots
+Apex-Panel/data/users.json
+Apex-Panel/data/screenshots.json
+Apex-Panel/data/bans.json
